@@ -6,6 +6,8 @@ const { getClientIp, getAllIpInfos } = require('./src/ipInfo');
 const { checkAllPlatforms } = require('./src/checker');
 const { PLATFORMS } = require('./src/platforms');
 
+const GH_PAGES_URL = 'https://hk59775634.github.io/check-ip-for-ai';
+const API_URL = 'https://aicheck.ai101.eu.org';
 const PORT = process.env.PORT || 3456;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SESSION_TTL_MS = 5 * 60 * 1000;
@@ -141,10 +143,10 @@ function writeCurlIpSection(res, ipInfos) {
 }
 
 const CURL_MULTI_IP_TIP_LINUX =
-  'curl https://aicheck.ai101.eu.org/linux-check.sh | bash';
+  `curl ${GH_PAGES_URL}/linux-check.sh | bash`;
 
 const CURL_MULTI_IP_TIP_CMD =
-  'curl.exe -s -o %TEMP%\\aicheck-multi-ip.cmd https://aicheck.ai101.eu.org/multi-ip.cmd && call %TEMP%\\aicheck-multi-ip.cmd';
+  `curl.exe -s -o %TEMP%\\aicheck-multi-ip.cmd ${GH_PAGES_URL}/multi-ip.cmd && call %TEMP%\\aicheck-multi-ip.cmd`;
 
 function writeCurlMultiIpTips(res) {
   res.write(`${ANSI.dim}Tip: multi-route IP discovery (Linux/macOS):${ANSI.reset}\n`);
@@ -163,7 +165,7 @@ async function handleStream(req, res, url, curlMode = false, session = null) {
 
   if (curlMode) {
     res.write(`${ANSI.bold}${ANSI.cyan}AI IP Connectivity Checker${ANSI.reset}\n`);
-    res.write(`${ANSI.dim}https://aicheck.ai101.eu.org${ANSI.reset}\n`);
+    res.write(`${ANSI.dim}${GH_PAGES_URL}${ANSI.reset}\n`);
     res.write('-'.repeat(40) + '\n');
   }
 

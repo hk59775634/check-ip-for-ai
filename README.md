@@ -2,17 +2,17 @@
 
 Detect whether your egress IP can access major AI platforms.
 
-- **Live:** https://aicheck.ai101.eu.org
-- **GitHub Pages:** https://hk59775634.github.io/check-ip-for-ai/
+- **Web:** https://hk59775634.github.io/check-ip-for-ai/
+- **API:** https://aicheck.ai101.eu.org
 
 ## Quick start
 
 ```bash
-# Single IP check
-curl https://aicheck.ai101.eu.org
+# Single IP check (API)
+curl -A curl https://aicheck.ai101.eu.org
 
 # Multi-route IP check (Linux/macOS)
-curl https://aicheck.ai101.eu.org/linux-check.sh | bash
+curl https://hk59775634.github.io/check-ip-for-ai/linux-check.sh | bash
 ```
 
 ## Self-host
