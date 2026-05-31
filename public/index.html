@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI IP 连通性检测器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            surface: { DEFAULT: '#0f172a', light: '#1e293b', card: '#1a2332' },
+            accent: { DEFAULT: '#6366f1', light: '#818cf8' },
+          },
+          animation: {
+            'pulse-dot': 'pulse-dot 1.4s ease-in-out infinite',
+            'fade-in': 'fade-in 0.3s ease-out',
+          },
+          keyframes: {
+            'pulse-dot': {
+              '0%, 100%': { opacity: '0.3' },
+              '50%': { opacity: '1' },
+            },
+            'fade-in': {
+              from: { opacity: '0', transform: 'translateY(8px)' },
+              to: { opacity: '1', transform: 'translateY(0)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { background: linear-gradient(135deg, #0f172a 0%, #1a1a2e 50%, #16213e 100%); min-height: 100vh; }
+    .glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.15); }
+    .card-ok { border-color: rgba(34, 197, 94, 0.3); background: rgba(34, 197, 94, 0.05); }
+    .card-blocked { border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+    .card-unknown { border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.05); }
+    .card-pending { border-color: rgba(99, 102, 241, 0.2); }
+  </style>
+</head>
+<body class="text-slate-200 antialiased">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <header class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-sm text-indigo-300 mb-4">
+        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse-dot"></span>
+        实时检测
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+        AI IP 连通性检测器
+      </h1>
+      <p class="mt-3 text-slate-400 text-sm md:text-base">检测当前 IP 是否可访问主流 AI 平台</p>
+    </header>
+
+    <!-- IP Info Card -->
+    <div id="ip-card" class="glass rounded-2xl p-6 mb-8 animate-fade-in">
+      <div id="ip-discovery-status" class="text-xs text-indigo-300/80 mb-3">正在多路由探测出口 IP...</div>
+      <div class="flex items-start gap-3">
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-2xl shrink-0">🌐</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-1">出口 IP</div>
+          <div id="ip-address" class="text-base font-semibold text-white leading-7">检测中...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-slate-300">平台检测结果</h2>
+      <div id="progress" class="text-sm text-slate-400">0 / 30</div>
+    </div>
+
+    <!-- Platform Grid -->
+    <div id="platform-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+
+    <!-- Footer -->
+    <footer class="mt-10 text-center text-xs text-slate-500 space-y-2">
+      <p>命令行检测: <code class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300">curl https://aicheck.ai101.eu.org</code></p>
+      <p>多 IP 探测 (Linux/macOS): <code class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300">curl https://aicheck.ai101.eu.org/linux-check.sh | bash</code></p>
+      <p>多 IP 探测 (Windows CMD，在 cmd 中粘贴运行):</p>
+      <p><code class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 text-[10px] break-all block max-w-3xl mx-auto">curl.exe -s -o %TEMP%\aicheck-multi-ip.cmd https://aicheck.ai101.eu.org/multi-ip.cmd &amp;&amp; call %TEMP%\aicheck-multi-ip.cmd</code></p>
+      <p class="mt-2"><a href="https://github.com/hk59775634/check-ip-for-ai" class="text-indigo-400 hover:underline" target="_blank" rel="noopener">https://github.com/hk59775634/check-ip-for-ai</a></p>
+    </footer>
+  </div>
+
+  <script src="./ipDiscovery.js?v=13"></script>
+  <script src="./platformProbe.js?v=13"></script>
+  <script src="./app.js?v=13"></script>
+</body>
+</html>

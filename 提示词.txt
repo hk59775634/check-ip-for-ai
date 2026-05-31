@@ -1,0 +1,47 @@
+# 角色与目标
+你是一个全栈开发专家，精通 Node.js (或 Python/Go) 和前端 Web 开发。请帮我开发一个名为 "AI IP 连通性检测器" 的 Web 应用。该应用可以通过浏览器或 Curl 命令行访问，实时并发测试当前客户端 IP 是否被主流 AI 平台接受。
+
+# 核心功能需求
+1. **多接口支持：**
+   - 当客户端在浏览器访问时，渲染一个好看的现代 Web 页面。
+   - 当客户端使用 `curl` 命令访问（如 `curl https://yourdomain.com`）时，返回纯文本检测结果。
+2. **多 AI 平台检测（至少包含：ChatGPT, Claude, Gemini, Copilot, Perplexity 等，参考当前热门的前20个AI平台）。**
+3. **步进式显示（Streaming）：**
+   - 网页端使用 Server-Sent Events (SSE) 或 WebSocket，实现检测结果“步进式/流式”逐个更新，不要让用户一次性等待所有结果。
+   - Curl 端需要实现逐行输出检测结果，支持 ansi color。
+4. **IP 基础信息：** 显示客户端的当前出口 IP 地址、所属国家及 ASN（运营商）。
+
+# 技术栈建议（可根据喜好调整）
+- 后端：Node.js (Express 或 Fastify) 或 FastAPI
+- 前端：HTML + Tailwind CSS (原生/轻量级，无需复杂框架)
+- 检测机制：后端通过代理请求各 AI 平台的官方状态页或 API，以此判断 IP 是否被阻断。
+
+# 详细开发步骤
+## 第一步：服务端架构 (检测引擎)
+- 编写一个路由，检测请求来源。如果 User-Agent 包含 `curl`，返回纯文本。否则返回 HTML 页面。
+- 实现一个并发检测函数：并发 ping/请求各大 AI 平台的域名或测速节点。
+- 区分不同平台的拦截特征（如直接返回 403、Connection Refused、或“不可用”提示）。
+
+## 第二步：前端 Web 界面
+- 顶部展示：当前 IP 地址、地理位置、网络运营商。
+- 下方展示：各大 AI 平台的卡片列表（包含图标）。
+- 状态展示逻辑：默认显示“检测中...”微动动画，检测完毕后更新为“✔️ 支持”或“❌ 受限”。
+
+## 第三步：实现 Curl 支持
+- 当判定 User-Agent 为 Curl 时，使用类似于终端进度条或纯文本换行输出的形式，展示正在检测的 AI 平台，并实时追加结果，例如：
+  正在检测您的 IP: 1.2.3.4
+  [✔️] ChatGPT
+  [❌] Claude
+  [✔️] Gemini
+
+请先为我设计项目的目录结构和主要的配置文件（如 package.json 或 requirements.txt），并等待我确认后再生成具体代码。
+
+
+参考项目：
+https://github.com/missuo/OpenAI-Checker
+https://github.com/jason5ng32/MyIP
+
+
+线上测试平台：
+root@103.6.4.141 免密登录
+/www/wwwroot/aicheck.ai101.eu.org 目录对应 https://aicheck.ai101.eu.org 前置cloudflare CDN

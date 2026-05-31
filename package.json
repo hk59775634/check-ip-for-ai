@@ -1,0 +1,14 @@
+{
+  "name": "ai-ip-checker",
+  "version": "1.0.0",
+  "description": "AI IP Connectivity Checker - test if your IP can access major AI platforms",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
