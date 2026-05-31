@@ -86,35 +86,6 @@ function pickProbe(platform, clientProbes) {
   return { probe: clientProbe, source: 'client' };
 }
 
-function summarizeBlocked(blockedIps, probe) {
-  const reasons = new Set(blockedIps.map((item) => item.reason));
-
-  if (reasons.has('network')) {
-    return {
-      status: 'blocked',
-      label: '受限',
-      reason: 'network',
-      detail: probe.error || `HTTP ${probe.status}` || 'Network blocked',
-    };
-  }
-  if (reasons.has('region')) {
-    return {
-      status: 'blocked',
-      label: '受限',
-      reason: 'region',
-      detail: blockedIps.length > 1
-        ? 'Region not supported for some egress IP(s)'
-        : 'Region not supported',
-    };
-  }
-  return {
-    status: 'unknown',
-    label: '未知',
-    reason: 'unknown',
-    detail: probe.error || `HTTP ${probe.status}` || 'Unknown',
-  };
-}
-
 function evaluatePlatformMulti(platform, ipInfos, probe) {
   const supportedIps = [];
   const blockedIps = [];
@@ -152,9 +123,39 @@ function evaluatePlatformMulti(platform, ipInfos, probe) {
     };
   }
 
-  const summary = summarizeBlocked(blockedIps, probe);
+  const hasAllowedRegionIp = ipInfos.some((ipInfo) =>
+    platform.regionCheck(ipInfo.countryCode)
+  );
+
+  if (hasAllowedRegionIp) {
+    const hasNetwork = blockedIps.some((item) => item.reason === 'network');
+    if (hasNetwork) {
+      return {
+        status: 'blocked',
+        label: '受限',
+        reason: 'network',
+        detail: probe.error || `HTTP ${probe.status}` || 'Network blocked',
+        supportedIps: [],
+        blockedIps,
+      };
+    }
+    return {
+      status: 'unknown',
+      label: '未知',
+      reason: 'unknown',
+      detail: probe.error || `HTTP ${probe.status}` || 'Unknown',
+      supportedIps: [],
+      blockedIps,
+    };
+  }
+
   return {
-    ...summary,
+    status: 'blocked',
+    label: '受限',
+    reason: 'region',
+    detail: blockedIps.length > 1
+      ? 'Region not supported for all egress IP(s)'
+      : 'Region not supported',
     supportedIps: [],
     blockedIps,
   };

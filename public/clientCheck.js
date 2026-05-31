@@ -31,18 +31,6 @@ function evaluateIpForPlatform(platform, ipInfo, probe) {
   return { supported: false, reason: 'unknown' };
 }
 
-function summarizeBlocked(blockedIps, probe) {
-  const reasons = new Set(blockedIps.map((item) => item.reason));
-
-  if (reasons.has('network')) {
-    return { status: 'blocked', reason: 'network' };
-  }
-  if (reasons.has('region')) {
-    return { status: 'blocked', reason: 'region' };
-  }
-  return { status: 'unknown', reason: 'unknown' };
-}
-
 function evaluatePlatform(platform, ipInfos, probe) {
   const list = Array.isArray(ipInfos) && ipInfos.length ? ipInfos : [{ countryCode: 'XX' }];
   const safeProbe = probe || { reachable: false, blocked: false, status: 0, error: 'unreachable' };
@@ -77,11 +65,25 @@ function evaluatePlatform(platform, ipInfos, probe) {
     };
   }
 
-  const summary = summarizeBlocked(blockedIps, safeProbe);
+  const hasAllowedRegionIp = list.some((ipInfo) =>
+    regionOk(platform, ipInfo.countryCode || ipInfo.country)
+  );
+
+  // Mixed egress: if any IP is in an allowed region, do not label the whole card as region-blocked.
+  if (hasAllowedRegionIp) {
+    const hasNetwork = blockedIps.some((item) => item.reason === 'network');
+    return {
+      id: platform.id,
+      status: hasNetwork ? 'blocked' : 'unknown',
+      reason: hasNetwork ? 'network' : 'unknown',
+      supportedIps: [],
+    };
+  }
+
   return {
     id: platform.id,
-    status: summary.status,
-    reason: summary.reason,
+    status: 'blocked',
+    reason: 'region',
     supportedIps: [],
   };
 }

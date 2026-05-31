@@ -198,7 +198,7 @@ evaluate_platform() {
     return
   fi
 
-  local all_unknown=1
+  local all_unknown=1 has_allowed=0
   for r in "${reasons[@]}"; do
     [[ "$r" != "unknown" ]] && all_unknown=0
   done
@@ -207,9 +207,21 @@ evaluate_platform() {
     return
   fi
 
+  for ip in "${DISCOVERED_IPS[@]}"; do
+    cc="${IP_CC[$ip]:-XX}"
+    if region_ok "$rule_type" "$rule_codes" "$cc"; then
+      has_allowed=1
+      break
+    fi
+  done
+
   for r in "${reasons[@]}"; do
     [[ "$r" == "network" ]] && { printf 'blocked|network'; return; }
   done
+  if (( has_allowed )); then
+    printf 'unknown|unknown'
+    return
+  fi
   for r in "${reasons[@]}"; do
     [[ "$r" == "region" ]] && { printf 'blocked|region'; return; }
   done
