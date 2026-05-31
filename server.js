@@ -7,7 +7,6 @@ const { checkAllPlatforms } = require('./src/checker');
 const { PLATFORMS } = require('./src/platforms');
 
 const GH_PAGES_URL = 'https://hk59775634.github.io/check-ip-for-ai';
-const API_URL = 'https://aicheck.ai101.eu.org';
 const PORT = process.env.PORT || 3456;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SESSION_TTL_MS = 5 * 60 * 1000;

@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'aicheck',
       script: 'server.js',
-      cwd: '/www/wwwroot/aicheck.ai101.eu.org',
+      cwd: __dirname,
       instances: 1,
       autorestart: true,
       watch: false,

@@ -132,12 +132,14 @@ async function mapPool(items, limit, fn) {
   return results;
 }
 
-async function probeAllPlatforms(platforms, onProgress) {
+async function probeAllPlatforms(platforms, onProgress, onResult) {
   const probes = {};
 
   await mapPool(platforms, PROBE_CONCURRENCY, async (platform) => {
     if (onProgress) onProgress(`检测 ${platform.name || platform.id} 连通性...`);
-    probes[platform.id] = await probeOne(platform.checkUrl, platform.url);
+    const probe = await probeOne(platform.checkUrl, platform.url);
+    probes[platform.id] = probe;
+    if (onResult) onResult(platform, probe);
   });
 
   return probes;

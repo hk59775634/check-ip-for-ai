@@ -1,25 +1,35 @@
 # AI IP Connectivity Checker
 
-Detect whether your egress IP can access major AI platforms.
+Detect whether your egress IP can access major AI platforms — **100% static, runs entirely in your browser**.
 
-- **Web:** https://hk59775634.github.io/check-ip-for-ai/
-- **API:** https://aicheck.ai101.eu.org
+- **Live site:** https://hk59775634.github.io/check-ip-for-ai/
 
-## Quick start
+## Features
 
-```bash
-# Single IP check (API)
-curl -A curl https://aicheck.ai101.eu.org
+- Multi-route egress IP discovery (ipcheck.ing, ipinfo.io, IPIP.net, …)
+- IP geolocation enrichment (ASN, ISP, country)
+- 30 AI platform connectivity probes (browser network path)
+- Region rule evaluation (OpenAI allowlist, Anthropic blocklist, etc.)
+- Streaming results — no backend required
 
-# Multi-route IP check (Linux/macOS)
-curl https://hk59775634.github.io/check-ip-for-ai/linux-check.sh | bash
-```
+## Usage
 
-## Self-host
+Open the URL in any modern browser. No install, no `npm start`.
+
+## Optional self-host (Node CLI + API)
+
+The repo still includes `server.js` for curl mode and SSE API if you want it:
 
 ```bash
 npm start
-# listens on http://127.0.0.1:3456
+curl -A curl http://127.0.0.1:3456
+```
+
+## Build GitHub Pages
+
+```bash
+node scripts/build-pages.js
+# output in _site/
 ```
 
 ## License

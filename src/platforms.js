@@ -9,6 +9,44 @@ const OPENAI_SUPPORTED = new Set([
 
 const ANTHROPIC_BLOCKED = new Set(['CN', 'HK', 'MO']);
 
+const REGION_SETS = {
+  openai: OPENAI_SUPPORTED,
+};
+
+const GOOGLE_BLOCKED = ['CN', 'IR', 'KP', 'SY', 'CU'];
+const US_SANCTIONS = ['CN', 'RU', 'IR', 'KP', 'CU'];
+const US_SANCTIONS_BY = ['CN', 'RU', 'IR', 'KP', 'CU', 'BY'];
+const COPILOT_BLOCKED = ['CN', 'RU', 'BY', 'KP', 'IR', 'CU'];
+const CHARACTER_BLOCKED = ['CN', 'RU', 'CU', 'IR', 'KP'];
+const CURSOR_BLOCKED = ['CN', 'IR', 'KP', 'CU'];
+
+function regionCheckFromRule(rule) {
+  if (!rule || rule.type === 'always') return () => true;
+  if (rule.type === 'allowlist') {
+    const set = rule.set ? REGION_SETS[rule.set] : new Set(rule.codes || []);
+    return (cc) => set.has(cc);
+  }
+  if (rule.type === 'blocklist') {
+    const list = rule.codes || [];
+    return (cc) => !list.includes(cc);
+  }
+  return () => true;
+}
+
+function serializeRegionRule(rule) {
+  if (!rule || rule.type === 'always') return { type: 'always' };
+  if (rule.type === 'allowlist' && rule.set) {
+    return { type: 'allowlist', codes: [...REGION_SETS[rule.set]] };
+  }
+  if (rule.type === 'blocklist') {
+    return { type: 'blocklist', codes: [...(rule.codes || [])] };
+  }
+  if (rule.type === 'allowlist') {
+    return { type: 'allowlist', codes: [...(rule.codes || [])] };
+  }
+  return { type: 'always' };
+}
+
 const PLATFORMS = [
   {
     id: 'chatgpt',
@@ -16,7 +54,7 @@ const PLATFORMS = [
     icon: '🤖',
     url: 'https://chatgpt.com',
     checkUrl: 'https://chatgpt.com/cdn-cgi/trace',
-    regionCheck: (cc) => OPENAI_SUPPORTED.has(cc),
+    regionRule: { type: 'allowlist', set: 'openai' },
   },
   {
     id: 'claude',
@@ -24,7 +62,7 @@ const PLATFORMS = [
     icon: '🟠',
     url: 'https://claude.ai',
     checkUrl: 'https://claude.ai',
-    regionCheck: (cc) => !ANTHROPIC_BLOCKED.has(cc),
+    regionRule: { type: 'blocklist', codes: [...ANTHROPIC_BLOCKED] },
   },
   {
     id: 'gemini',
@@ -32,7 +70,7 @@ const PLATFORMS = [
     icon: '✨',
     url: 'https://gemini.google.com',
     checkUrl: 'https://gemini.google.com',
-    regionCheck: (cc) => !['CN', 'IR', 'KP', 'SY', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: GOOGLE_BLOCKED },
   },
   {
     id: 'google-aimode',
@@ -40,7 +78,7 @@ const PLATFORMS = [
     icon: '🧠',
     url: 'https://www.google.com/aimode',
     checkUrl: 'https://www.google.com/aimode',
-    regionCheck: (cc) => !['CN', 'IR', 'KP', 'SY', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: GOOGLE_BLOCKED },
   },
   {
     id: 'copilot',
@@ -48,7 +86,7 @@ const PLATFORMS = [
     icon: '🔵',
     url: 'https://copilot.microsoft.com',
     checkUrl: 'https://copilot.microsoft.com',
-    regionCheck: (cc) => !['CN', 'RU', 'BY', 'KP', 'IR', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: COPILOT_BLOCKED },
   },
   {
     id: 'perplexity',
@@ -56,7 +94,7 @@ const PLATFORMS = [
     icon: '🔍',
     url: 'https://www.perplexity.ai',
     checkUrl: 'https://www.perplexity.ai',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'grok',
@@ -64,7 +102,7 @@ const PLATFORMS = [
     icon: '⚡',
     url: 'https://grok.com',
     checkUrl: 'https://grok.com',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU', 'BY'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS_BY },
   },
   {
     id: 'mistral',
@@ -72,7 +110,7 @@ const PLATFORMS = [
     icon: '🌬️',
     url: 'https://chat.mistral.ai',
     checkUrl: 'https://chat.mistral.ai',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'deepseek',
@@ -80,7 +118,7 @@ const PLATFORMS = [
     icon: '🐋',
     url: 'https://chat.deepseek.com',
     checkUrl: 'https://chat.deepseek.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'poe',
@@ -88,7 +126,7 @@ const PLATFORMS = [
     icon: '📝',
     url: 'https://poe.com',
     checkUrl: 'https://poe.com',
-    regionCheck: (cc) => OPENAI_SUPPORTED.has(cc),
+    regionRule: { type: 'allowlist', set: 'openai' },
   },
   {
     id: 'character',
@@ -96,7 +134,7 @@ const PLATFORMS = [
     icon: '🎭',
     url: 'https://character.ai',
     checkUrl: 'https://character.ai',
-    regionCheck: (cc) => !['CN', 'RU', 'CU', 'IR', 'KP'].includes(cc),
+    regionRule: { type: 'blocklist', codes: CHARACTER_BLOCKED },
   },
   {
     id: 'huggingface',
@@ -104,7 +142,7 @@ const PLATFORMS = [
     icon: '🤗',
     url: 'https://huggingface.co',
     checkUrl: 'https://huggingface.co',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'cohere',
@@ -112,7 +150,7 @@ const PLATFORMS = [
     icon: '🔗',
     url: 'https://cohere.com',
     checkUrl: 'https://cohere.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'meta',
@@ -120,7 +158,7 @@ const PLATFORMS = [
     icon: '🦙',
     url: 'https://www.meta.ai',
     checkUrl: 'https://www.meta.ai',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'pi',
@@ -128,7 +166,7 @@ const PLATFORMS = [
     icon: '🥧',
     url: 'https://pi.ai',
     checkUrl: 'https://pi.ai',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'you',
@@ -136,7 +174,7 @@ const PLATFORMS = [
     icon: '🎯',
     url: 'https://you.com',
     checkUrl: 'https://you.com',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'phind',
@@ -144,7 +182,7 @@ const PLATFORMS = [
     icon: '💻',
     url: 'https://phind.com',
     checkUrl: 'https://phind.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'replicate',
@@ -152,7 +190,7 @@ const PLATFORMS = [
     icon: '🔁',
     url: 'https://replicate.com',
     checkUrl: 'https://replicate.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'together',
@@ -160,7 +198,7 @@ const PLATFORMS = [
     icon: '🤝',
     url: 'https://www.together.ai',
     checkUrl: 'https://www.together.ai',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'openrouter',
@@ -168,7 +206,7 @@ const PLATFORMS = [
     icon: '🛣️',
     url: 'https://openrouter.ai',
     checkUrl: 'https://openrouter.ai',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'stability',
@@ -176,7 +214,7 @@ const PLATFORMS = [
     icon: '🎨',
     url: 'https://stability.ai',
     checkUrl: 'https://stability.ai',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'kimi',
@@ -184,7 +222,7 @@ const PLATFORMS = [
     icon: '🌙',
     url: 'https://www.kimi.com',
     checkUrl: 'https://www.kimi.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'qwen',
@@ -192,7 +230,7 @@ const PLATFORMS = [
     icon: '🐱',
     url: 'https://chat.qwen.ai',
     checkUrl: 'https://chat.qwen.ai',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'cursor',
@@ -200,7 +238,7 @@ const PLATFORMS = [
     icon: '🖱️',
     url: 'https://cursor.com',
     checkUrl: 'https://cursor.com',
-    regionCheck: (cc) => !['CN', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: CURSOR_BLOCKED },
   },
   {
     id: 'midjourney',
@@ -208,7 +246,7 @@ const PLATFORMS = [
     icon: '🖼️',
     url: 'https://www.midjourney.com/home',
     checkUrl: 'https://www.midjourney.com/home',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'aistudio',
@@ -216,7 +254,7 @@ const PLATFORMS = [
     icon: '🧪',
     url: 'https://aistudio.google.com',
     checkUrl: 'https://aistudio.google.com',
-    regionCheck: (cc) => !['CN', 'IR', 'KP', 'SY', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: GOOGLE_BLOCKED },
   },
   {
     id: 'notebooklm',
@@ -224,7 +262,7 @@ const PLATFORMS = [
     icon: '📓',
     url: 'https://notebooklm.google.com',
     checkUrl: 'https://notebooklm.google.com',
-    regionCheck: (cc) => !['CN', 'IR', 'KP', 'SY', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: GOOGLE_BLOCKED },
   },
   {
     id: 'groq',
@@ -232,7 +270,7 @@ const PLATFORMS = [
     icon: '⚙️',
     url: 'https://groq.com',
     checkUrl: 'https://groq.com',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
   {
     id: 'runway',
@@ -240,7 +278,7 @@ const PLATFORMS = [
     icon: '🎬',
     url: 'https://runwayml.com',
     checkUrl: 'https://runwayml.com',
-    regionCheck: (cc) => !['CN', 'RU', 'IR', 'KP', 'CU'].includes(cc),
+    regionRule: { type: 'blocklist', codes: US_SANCTIONS },
   },
   {
     id: 'elevenlabs',
@@ -248,8 +286,12 @@ const PLATFORMS = [
     icon: '🎙️',
     url: 'https://elevenlabs.io',
     checkUrl: 'https://elevenlabs.io',
-    regionCheck: () => true,
+    regionRule: { type: 'always' },
   },
 ];
 
-module.exports = { PLATFORMS, OPENAI_SUPPORTED };
+for (const platform of PLATFORMS) {
+  platform.regionCheck = regionCheckFromRule(platform.regionRule);
+}
+
+module.exports = { PLATFORMS, OPENAI_SUPPORTED, REGION_SETS, serializeRegionRule };

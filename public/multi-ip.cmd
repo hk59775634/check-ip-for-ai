@@ -11,7 +11,7 @@ if not defined IPS (
   exit /b 1
 )
 
-curl.exe -s -A curl "https://aicheck.ai101.eu.org/?ips=!IPS:~1!"
+curl.exe -s -A curl "https://hk59775634.github.io/check-ip-for-ai/?ips=!IPS:~1!"
 exit /b 0
 
 :append

@@ -2,7 +2,7 @@
 # AI IP multi-route check - discover egress IPs then run platform test
 # Usage: curl https://hk59775634.github.io/check-ip-for-ai/linux-check.sh | bash
 
-AICHECK_URL="${AICHECK_URL:-https://aicheck.ai101.eu.org}"
+AICHECK_URL="${AICHECK_URL:-https://hk59775634.github.io/check-ip-for-ai}"
 
 trace_ip() {
   curl -fsS -m 8 "$1" 2>/dev/null | grep -m1 '^ip=' | cut -d= -f2- || true

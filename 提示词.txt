@@ -42,6 +42,5 @@ https://github.com/missuo/OpenAI-Checker
 https://github.com/jason5ng32/MyIP
 
 
-线上测试平台：
-root@103.6.4.141 免密登录
-/www/wwwroot/aicheck.ai101.eu.org 目录对应 https://aicheck.ai101.eu.org 前置cloudflare CDN
+线上访问：
+https://hk59775634.github.io/check-ip-for-ai/

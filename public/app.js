@@ -1,5 +1,4 @@
 let PLATFORMS = [];
-const API_BASE = window.API_BASE || '';
 
 const grid = document.getElementById('platform-grid');
 const progress = document.getElementById('progress');
@@ -63,8 +62,11 @@ function updateCard(result) {
     badgeEl.className = 'status-badge w-8 h-8 rounded-lg flex items-center justify-center text-lg bg-yellow-500/10';
   }
 
-  completed++;
-  progress.textContent = `${completed} / ${PLATFORMS.length}`;
+  if (!el.dataset.done) {
+    el.dataset.done = '1';
+    completed++;
+    progress.textContent = `${completed} / ${PLATFORMS.length}`;
+  }
 }
 
 const ROUTE_PRIORITY = ['China', 'Global', 'CF-v4', 'CF-v6', 'Dual', 'IPv4', 'IPv6'];
@@ -93,10 +95,6 @@ function ipSummaryLine(info) {
   const tag = shortRouteLabel(info);
   const tail = [info.asn, info.isp].filter(Boolean).join(' · ');
   return tail ? `${tag} ${tail}` : tag;
-}
-
-function routeLabel(info) {
-  return shortRouteLabel(info);
 }
 
 function ipFullLine(info) {
@@ -135,71 +133,8 @@ function setDiscoveryStatus(text) {
   if (discoveryStatus) discoveryStatus.textContent = text;
 }
 
-async function registerDiscoveredIps(discovered, probes = null) {
-  const res = await fetch(`${API_BASE}/api/ips`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ discovered, probes }),
-  });
-  if (!res.ok) throw new Error('Failed to register IPs');
-  const data = await res.json();
-  return data.token;
-}
-
-function startStream(token) {
-  const source = new EventSource(`${API_BASE}/api/stream?token=${encodeURIComponent(token)}`);
-
-  source.addEventListener('ip', (e) => {
-    updateIpInfo(JSON.parse(e.data));
-  });
-
-  source.addEventListener('result', (e) => {
-    updateCard(JSON.parse(e.data));
-  });
-
-  source.addEventListener('done', () => {
-    source.close();
-  });
-
-  source.onerror = () => {
-    if (source.readyState === EventSource.CLOSED) return;
-    source.close();
-    if (completed === 0) {
-      fetch(`${API_BASE}/api/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          discovered: window.__lastDiscovered || [],
-          probes: window.__lastProbes || null,
-        }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          updateIpInfo(data);
-          data.results.forEach(updateCard);
-        })
-        .catch(() => {
-          document.getElementById('ip-address').textContent = '连接失败';
-        });
-    }
-  };
-}
-
-async function probePlatformsFromBrowser(onProgress) {
-  if (!window.PlatformProbe) return null;
-  try {
-    const res = await fetch(`${API_BASE}/api/platforms`);
-    if (!res.ok) return null;
-    const platforms = await res.json();
-    if (onProgress) onProgress('正在从浏览器检测平台连通性...');
-    return await window.PlatformProbe.probeAllPlatforms(platforms, onProgress);
-  } catch {
-    return null;
-  }
-}
-
 async function loadPlatforms() {
-  const res = await fetch(`${API_BASE}/api/platforms`);
+  const res = await fetch('./platforms.json');
   if (!res.ok) throw new Error('Failed to load platforms');
   PLATFORMS = await res.json();
 }
@@ -214,34 +149,51 @@ async function main() {
 
   PLATFORMS.forEach((p) => grid.appendChild(createCard(p)));
   progress.textContent = `0 / ${PLATFORMS.length}`;
+  completed = 0;
 
   let discovered = [];
-  let probes = null;
-
   if (window.IpDiscovery) {
     try {
       setDiscoveryStatus('正在多路由探测出口 IP...');
       discovered = await window.IpDiscovery.discoverAllIps(setDiscoveryStatus);
-      window.__lastDiscovered = discovered;
     } catch {
       setDiscoveryStatus('出口 IP 探测失败');
     }
   } else {
-    setDiscoveryStatus('探测模块加载失败，使用服务器检测');
-  }
-
-  probes = await probePlatformsFromBrowser(setDiscoveryStatus);
-  window.__lastProbes = probes;
-
-  if (discovered.length === 0) {
-    setDiscoveryStatus(probes ? '浏览器连通性检测完成，开始平台检测...' : '使用服务器检测');
-    startStream(await registerDiscoveredIps([], probes));
+    setDiscoveryStatus('IP 探测模块未加载');
     return;
   }
 
-  setDiscoveryStatus(`已发现 ${discovered.length} 个出口 IP，开始平台检测...`);
-  const token = await registerDiscoveredIps(discovered, probes);
-  startStream(token);
+  let ipInfos = discovered;
+  if (window.IpEnrich && discovered.length) {
+    try {
+      ipInfos = await window.IpEnrich.enrichDiscovered(discovered, setDiscoveryStatus);
+    } catch {
+      ipInfos = discovered;
+    }
+  }
+
+  if (ipInfos.length) {
+    updateIpInfo({ ips: ipInfos, splitTunnel: ipInfos.length > 1 });
+  } else {
+    document.getElementById('ip-address').textContent = '未能探测到出口 IP';
+  }
+
+  if (!window.PlatformProbe || !window.ClientCheck) {
+    setDiscoveryStatus('检测模块未加载');
+    return;
+  }
+
+  await window.PlatformProbe.probeAllPlatforms(
+    PLATFORMS,
+    setDiscoveryStatus,
+    (platform, probe) => {
+      const result = window.ClientCheck.evaluatePlatform(platform, ipInfos, probe);
+      updateCard(result);
+    }
+  );
+
+  setDiscoveryStatus('检测完成 · 纯浏览器本地检测');
 }
 
 main();
