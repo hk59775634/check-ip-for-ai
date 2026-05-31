@@ -24,7 +24,7 @@ if (fs.existsSync(dest)) {
   fs.rmSync(dest, { recursive: true, force: true });
 }
 
-copyDir(src, dest);
+require('./build-linux-check.sh.js');
 
 const platforms = PLATFORMS.map((p) => ({
   id: p.id,
@@ -35,7 +35,9 @@ const platforms = PLATFORMS.map((p) => ({
   regionRule: serializeRegionRule(p.regionRule),
 }));
 const platformsJson = JSON.stringify(platforms, null, 2);
-fs.writeFileSync(path.join(dest, 'platforms.json'), platformsJson, 'utf8');
 fs.writeFileSync(path.join(src, 'platforms.json'), platformsJson, 'utf8');
+
+copyDir(src, dest);
+fs.writeFileSync(path.join(dest, 'platforms.json'), platformsJson, 'utf8');
 
 console.log(`GitHub Pages site prepared in _site/ (${GH_PAGES_URL})`);

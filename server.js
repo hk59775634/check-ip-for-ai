@@ -142,16 +142,11 @@ function writeCurlIpSection(res, ipInfos) {
 }
 
 const CURL_MULTI_IP_TIP_LINUX =
-  `curl ${GH_PAGES_URL}/linux-check.sh | bash`;
-
-const CURL_MULTI_IP_TIP_CMD =
-  `curl.exe -s -o %TEMP%\\aicheck-multi-ip.cmd ${GH_PAGES_URL}/multi-ip.cmd && call %TEMP%\\aicheck-multi-ip.cmd`;
+  `curl -fsSL ${GH_PAGES_URL}/linux-check.sh | bash`;
 
 function writeCurlMultiIpTips(res) {
-  res.write(`${ANSI.dim}Tip: multi-route IP discovery (Linux/macOS):${ANSI.reset}\n`);
+  res.write(`${ANSI.dim}Tip: full local check (Linux/macOS):${ANSI.reset}\n`);
   res.write(`${ANSI.dim}${CURL_MULTI_IP_TIP_LINUX}${ANSI.reset}\n\n`);
-  res.write(`${ANSI.dim}Tip: multi-route IP discovery (Windows CMD):${ANSI.reset}\n`);
-  res.write(`${ANSI.dim}${CURL_MULTI_IP_TIP_CMD}${ANSI.reset}\n\n`);
 }
 
 async function handleStream(req, res, url, curlMode = false, session = null) {
